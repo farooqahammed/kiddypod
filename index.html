@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiddypod - Tiny Threads. Big Smiles.</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <style>
+        @font-face {
+            font-family: 'All Round Gothic';
+            src: local('All Round Gothic Bold'),
+                 local('AllRoundGothic-Bold'),
+                 url('fonts/AllRoundGothic-Bold.woff2') format('woff2'),
+                 url('fonts/AllRoundGothic-Bold.woff') format('woff');
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+            font-stretch: normal;
+            unicode-range: U+000-5FF; /* Latin character set */
+        }
+    </style>
+    <script>
+        // Font loading detection
+        document.fonts.ready.then(function() {
+            console.log('Fonts loaded:', document.fonts.check('bold 16px "All Round Gothic"'));
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #9f71db;      /* Lavender */
+            --primary-light: #d1b8f0; /* Lighter Lavender */
+            --primary-lightest: #f0e6ff; /* Lightest Lavender */
+            --secondary: #C8E6C9;    /* Mint Green */
+            --accent: #FFDAB9;       /* Peach */
+            --background: #d1b8f0;   /* Light Lavender */
+            --background-light: #f0e6ff; /* Lighter Lavender */
+            --text: #333333;         /* Dark Gray */
+            --text-light: #666666;   /* Light Gray */
+            --white: #FFFFFF;        /* White */
+            --border-radius: 20px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, button, input, select, textarea {
+            font-family: 'Round Gothic', 'Quicksand', 'Poppins', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            background-color: var(--background);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+            position: relative;
+        }
+        
+        .logo {
+            display: inline-block;
+            text-decoration: none;
+            height: 50px;
+            margin-left: auto; /* Push logo to the right */
+        }
+        
+        .logo img {
+            height: 100%;
+            width: auto;
+        }
+        
+        /* Mobile Menu Button */
+        .menu-btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1001;
+        }
+        
+        .menu-btn__line {
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+            transition: var(--transition);
+            border-radius: 3px;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: var(--transition);
+            padding: 100px 20px 40px;
+            overflow-y: auto;
+        }
+        
+        .mobile-menu.active {
+            left: 0;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 15px 0;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: var(--transition);
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        .mobile-menu a:hover {
+            color: var(--primary);
+            padding-left: 10px;
+        }
+        
+        .mobile-menu .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(159, 113, 219, 0.3);
+        }
+        
+        .mobile-menu .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 999;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 120px 0 60px;
+            position: relative;
+            overflow: hidden;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            background-color: var(--background);
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            z-index: -1;
+            opacity: 0.8;
+        }
+        
+        .hero-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+            min-height: 80vh;
+        }
+        
+        .hero-content-wrapper {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 60px;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            text-align: left;
+            padding: 2rem 0;
+        }
+        
+        .hero-image-container {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+            max-height: 600px;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .hero-image-container img.hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            transition: transform 0.5s ease;
+            display: block;
+        }
+        
+        @media (max-width: 992px) {
+            .hero {
+                padding: 100px 0 40px;
+                min-height: auto;
+            }
+            
+            .hero-container {
+                min-height: auto;
+            }
+            
+            .hero-content-wrapper {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .hero-image-container {
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+                min-height: 250px;
+                padding: 1rem;
+            }
+        }
+        
+        .hero-image-container:hover img {
+            transform: scale(1.05);
+        }
+        
+        .hero-image-placeholder {
+            text-align: center;
+            color: #ccc;
+            padding: 20px;
+        }
+        
+        .hero-image-placeholder i {
+            font-size: 4rem;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .launch-banner {
+            display: inline-block;
+            color: #9f71db;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #9f71db;
+            padding: 0.6rem 2rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            background: transparent;
+        }
+        
+        .launch-banner:hover {
+            background-color: #9f71db;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(159, 113, 219, 0.3);
+        }
+        
+        /* Section Styles */
+        section {
+            padding: 100px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--text);
+            margin-bottom: 15px;
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        .section-title p {
+            color: var(--text-light);
+            max-width: 700px;
+            margin: 0 auto;
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        /* About Section */
+        .about {
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        
+        .about-text {
+            flex: 1;
+        }
+        
+        .about-image {
+            flex: 1;
+            position: relative;
+        }
+        
+        .about-image img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        /* Categories */
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .category-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+        
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-image {
+            height: 250px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ddd;
+            font-size: 3rem;
+        }
+        
+        .category-content {
+            padding: 25px;
+        }
+        
+        .category-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text);
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        .category-content p {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        /* Features */
+        .features {
+            background: var(--white);
+            text-align: center;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+        
+        .feature-card {
+            padding: 30px;
+            border-radius: var(--border-radius);
+            background: var(--white);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(159, 113, 219, 0.15);
+            background-color: var(--primary-lightest);
+            border-color: var(--primary-light);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--background);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            color: var(--text);
+            font-size: 2rem;
+            border: 2px solid var(--accent);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--text);
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            font-family: 'Round Gothic', 'Poppins', sans-serif;
+        }
+        
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            text-align: center;
+            padding: 100px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta p {
+            max-width: 700px;
+            margin: 0 auto 30px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .cta .btn {
+            background: white;
+            color: var(--primary);
+        }
+        
+        .cta .btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Footer */
+        footer {
+            background: #f8f8f8;
+            color: #333;
+            padding: 3rem 0 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #333;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: #7e57c2;
+            padding-left: 5px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+            color: #333;
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            .about-content {
+                flex-direction: column;
+            }
+            
+            .about-text, .about-image {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .section-title h2 {
+                font-size: 2rem;
+            }
+            
+            .hero {
+                padding: 150px 0 80px;
+                text-align: center;
+            }
+            
+            .hero-content {
+                margin: 0 auto;
+            }
+            
+            .categories {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Decorative Elements */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.3;
+            z-index: -1;
+        }
+        
+        .blob-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            top: -150px;
+            right: -150px;
+        }
+        
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--secondary);
+            bottom: -200px;
+            left: -200px;
+        }
+        
+        .squiggle {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .squiggle-1 {
+            top: 20%;
+            left: 5%;
+            transform: rotate(15deg);
+        }
+        
+        .squiggle-2 {
+            bottom: 15%;
+            right: 5%;
+            transform: rotate(-15deg);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <button class="menu-btn" id="menuBtn">
+                    <span class="menu-btn__line"></span>
+                    <span class="menu-btn__line"></span>
+                    <span class="menu-btn__line"></span>
+                </button>
+                
+                <nav class="mobile-menu" id="mobileMenu">
+                    <a href="#" class="nav-link" data-target="hero">Home</a>
+                    <a href="#about" class="nav-link" data-target="about">About Us</a>
+                    <a href="#collections" class="nav-link" data-target="collections">Collections</a>
+                    <a href="#our-promise" class="nav-link" data-target="our-promise">Our Promise</a>
+                    <a href="#contact" class="nav-link" data-target="contact">Contact</a>
+                </nav>
+                
+                <div class="overlay" id="overlay"></div>
+                
+                <a href="#" class="logo">
+                    <img src="img/logo.png" alt="Kiddypod" style="height: 60px;">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="container">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="squiggle squiggle-1">
+                <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20,100 C40,40 100,40 160,80" stroke="var(--primary)" stroke-width="8" stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
+            <div class="squiggle squiggle-2">
+                <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M180,100 C160,160 100,160 40,120" stroke="var(--secondary)" stroke-width="8" stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
+            <div class="hero-container">
+                <div class="hero-content-wrapper">
+                    <div class="hero-content">
+                        <h1 style="font-family: 'All Round Gothic', sans-serif; font-weight: bold; font-size: 3.5rem; line-height: 1.2; margin-bottom: 20px; letter-spacing: -0.5px; font-synthesis: none; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">Comfortable Wear for Kids and Babies</h1>
+                        <p style="margin-bottom: 0;">Discover our premium collection of soft, safe, and stylish clothing for your little ones. Made with love and care for their delicate skin.</p>
+                    </div>
+                    <div class="hero-image-container">
+                        <img src="img/hero.png" alt="Kiddypod kids fashion collection" class="hero-image">
+                    </div>
+                </div>
+                <div style="text-align: center; margin: 2rem 0 1rem;">
+                    <a href="#" class="launch-banner" style="font-family: 'All Round Gothic', sans-serif; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px;">Launching Soon</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text" style="font-family: 'All Round Gothic', sans-serif; line-height: 1.7;">
+                    <div class="section-title">
+                        <h2 style="font-family: 'All Round Gothic', sans-serif; font-weight: bold; margin-bottom: 1.5rem;">About Us</h2>
+                    </div>
+                    <p style="margin: 0 auto 2rem; max-width: 800px; text-align: justify; font-family: 'Poppins', sans-serif; color: #666; line-height: 1.7; font-size: 1.1rem;">At Kiddypod, we craft clothing that grows with your little ones — from their very first giggles to their tiny first steps. Designed especially for infants and toddlers aged 0–5 years, our collections are as gentle as a hug and as lively as childhood itself. We use organic, skin-safe fabrics to ensure every outfit is soft, breathable, and free from harsh chemicals — because your child deserves nothing less. Our promise is to make dressing your little stars both joyful and worry-free, so you can focus on the smiles and milestones. Kiddypod is here to affirm every parent's choice for safe, stylish, and thoughtfully made kidswear.</p>
+                </div>
+                <div class="about-image">
+                    <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                        <img src="img/Aboutus.png" alt="Kiddypod - About Us" style="width: 100%; height: auto; display: block; transition: transform 0.3s ease;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collections Section -->
+    <section id="collections" class="collections" style="padding: 5rem 0; background-color: var(--background);">
+        <div class="container">
+            <div class="section-title" style="text-align: center; margin-bottom: 3rem;">
+                <h2 style="font-family: 'All Round Gothic', sans-serif; font-weight: bold; font-size: 2.5rem; color: #333; margin-bottom: 1rem;">Our Collections</h2>
+                <p style="color: #666; max-width: 700px; margin: 0 auto;">Explore our carefully curated collections designed for every stage of your child's growth.</p>
+            </div>
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;">
+                <!-- Baby Basics Card -->
+                <div style="flex: 1; min-width: 280px; max-width: 350px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease; display: flex; flex-direction: column;">
+                    <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center; background: #f9f5ff; padding: 1.5rem;">
+                        <a href="#" style="display: block; width: 100%; height: 100%;">
+                            <img src="img/bb_basic.png" alt="Baby Basics Collection" style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.5s ease; max-height: 220px;">
+                        </a>
+                    </div>
+                    <div style="padding: 1.5rem; text-align: center;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">Baby Basics</h3>
+                        <p style="color: #666; margin-bottom: 1.5rem; min-height: 60px;">Essential clothing for newborns and infants, made with the softest materials for delicate skin.</p>
+                        <a href="#" style="display: inline-block; color: #9f71db; text-decoration: none; font-weight: 600; border: 2px solid #9f71db; padding: 0.6rem 1.5rem; border-radius: 4px; transition: all 0.3s ease;">View Collection</a>
+                    </div>
+                </div>
+
+                <!-- Children's Clothing Card -->
+                <div style="flex: 1; min-width: 280px; max-width: 350px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease; display: flex; flex-direction: column;">
+                    <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center; background: #f9f5ff; padding: 1.5rem;">
+                        <a href="#" style="display: block; width: 100%; height: 100%;">
+                            <img src="img/Child-cloth.png" alt="Children's Clothing Collection" style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.5s ease; max-height: 220px;">
+                        </a>
+                    </div>
+                    <div style="padding: 1.5rem; text-align: center;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">Children's Clothing</h3>
+                        <p style="color: #666; margin-bottom: 1.5rem; min-height: 60px;">Trendy and comfortable outfits for growing kids, perfect for playtime and special occasions.</p>
+                        <a href="#" style="display: inline-block; color: #9f71db; text-decoration: none; font-weight: 600; border: 2px solid #9f71db; padding: 0.6rem 1.5rem; border-radius: 4px; transition: all 0.3s ease;">View Collection</a>
+                    </div>
+                </div>
+
+                <!-- Mix & Match Card -->
+                <div style="flex: 1; min-width: 280px; max-width: 350px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease; display: flex; flex-direction: column;">
+                    <div style="flex: 1; min-height: 250px; display: flex; align-items: center; justify-content: center; background: #f9f5ff; padding: 1.5rem;">
+                        <a href="#" style="display: block; width: 100%; height: 100%;">
+                            <img src="img/MixnMatch.png" alt="Mix & Match Collection" style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.5s ease; max-height: 220px;">
+                        </a>
+                    </div>
+                    <div style="padding: 1.5rem; text-align: center;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">Mix & Match</h3>
+                        <p style="color: #666; margin-bottom: 1.5rem; min-height: 60px;">Versatile pieces that can be mixed and matched to create multiple stylish outfits.</p>
+                        <a href="#" style="display: inline-block; color: #9f71db; text-decoration: none; font-weight: 600; border: 2px solid #9f71db; padding: 0.6rem 1.5rem; border-radius: 4px; transition: all 0.3s ease;">View Collection</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Promise Section -->
+    <section id="our-promise" class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2 style="font-family: 'All Round Gothic', sans-serif; font-weight: bold; font-size: 2.5rem; color: #333; margin-bottom: 1rem;">Our Promise</h2>
+                <p>We're committed to providing the best for your little ones with these core values at heart.</p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 2rem 0; justify-content: space-between;">
+                <!-- Premium Quality Card -->
+                <div style="flex: 1; min-width: 200px; background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <div style="width: 50px; height: 50px; background: #f0e6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-star" style="color: #9f71db; font-size: 1.2rem;"></i>
+                    </div>
+                    <h3 style="font-size: 1.1rem; color: #333; margin-bottom: 0.75rem; text-align: center;">Premium Quality</h3>
+                    <p style="color: #666; font-size: 0.9rem; text-align: center; margin: 0;">Only the finest materials that are gentle on your child's skin.</p>
+                </div>
+
+                <!-- Thoughtful Design Card -->
+                <div style="flex: 1; min-width: 200px; background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <div style="width: 50px; height: 50px; background: #e6f7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-paint-brush" style="color: #5d9cec; font-size: 1.2rem;"></i>
+                    </div>
+                    <h3 style="font-size: 1.1rem; color: #333; margin-bottom: 0.75rem; text-align: center;">Thoughtful Design</h3>
+                    <p style="color: #666; font-size: 0.9rem; text-align: center; margin: 0;">Clothes that are as functional as they are fashionable.</p>
+                </div>
+
+                <!-- Eco-Friendly Card -->
+                <div style="flex: 1; min-width: 200px; background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <div style="width: 50px; height: 50px; background: #e6f9f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-leaf" style="color: #48cfad; font-size: 1.2rem;"></i>
+                    </div>
+                    <h3 style="font-size: 1.1rem; color: #333; margin-bottom: 0.75rem; text-align: center;">Eco-Friendly</h3>
+                    <p style="color: #666; font-size: 0.9rem; text-align: center; margin: 0;">Sustainable practices for a better future.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2 style="font-family: 'All Round Gothic', sans-serif; font-weight: bold; font-size: 2.5rem; color: #333; margin-bottom: 1rem;">Opening Soon</h2>
+            <p style="margin-bottom: 2rem; max-width: 700px; margin-left: auto; margin-right: auto; text-align: center; color: #000; line-height: 1.7; font-size: 1.1rem;">Be the first to know when we launch our exclusive collection. Sign up for early access and special offers!</p>
+            <div style="max-width: 500px; margin: 0 auto; position: relative;">
+                <form id="notifyForm" action="https://formspree.io/f/meozjgza" method="POST" class="subscribe-form" style="display: flex; gap: 10px; position: relative;">
+                    <input type="email" id="emailInput" name="email" placeholder="Enter your email" required
+                           style="flex: 1; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 50px; 
+                                  font-family: 'Poppins', sans-serif; font-size: 0.95rem; transition: all 0.3s ease;
+                                  outline: none;">
+                    <button type="submit" id="submitBtn" class="notify-btn" 
+                            style="white-space: nowrap; background: linear-gradient(135deg, #9f71db 0%, #7e57c2 100%); 
+                                   color: white; border: none; padding: 0 2rem; border-radius: 50px; 
+                                   font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.9rem; 
+                                   height: 50px; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+                                   box-shadow: 0 4px 15px rgba(159, 113, 219, 0.3); text-transform: uppercase; 
+                                   letter-spacing: 0.5px; position: relative; overflow: hidden;">
+                        <span class="btn-text" style="position: relative; z-index: 2; display: inline-block; transition: transform 0.3s ease;">Notify Me</span>
+                        <span class="btn-hover" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                                   background: linear-gradient(135deg, #7e57c2 0%, #9f71db 100%); opacity: 0; 
+                                   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+                        </span>
+                    </button>
+                </form>
+                <div id="notification" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+                           background: #4CAF50; color: white; padding: 15px 30px; border-radius: 50px; 
+                           font-family: 'Poppins', sans-serif; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                           z-index: 1000; animation: slideDown 0.5s ease-out;">
+                    Thank You! We'll Notify You Soon
+                </div>
+            </div>
+            
+            <style>
+                @keyframes slideDown {
+                    from { top: -50px; opacity: 0; }
+                    to { top: 20px; opacity: 1; }
+                }
+                
+                .notify-btn:hover .btn-hover {
+                    opacity: 1;
+                }
+                
+                .notify-btn:hover .btn-text {
+                    transform: translateY(-1px);
+                }
+                
+                .notify-btn:active {
+                    transform: translateY(2px);
+                    box-shadow: 0 2px 10px rgba(159, 113, 219, 0.3);
+                }
+                
+                #emailInput:focus {
+                    border-color: #9f71db;
+                    box-shadow: 0 0 0 3px rgba(159, 113, 219, 0.2);
+                }
+            </style>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <img src="img/logo.png" alt="Kiddypod" style="height: 60px; margin-bottom: 25px;">
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest-p"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Shop</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">New Arrivals</a></li>
+                        <li><a href="#">Baby (0-24M)</a></li>
+                        <li><a href="#">Toddler (2-4Y)</a></li>
+                        <li><a href="#">Kids (4-8Y)</a></li>
+                        <li><a href="#">Accessories</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>About Us</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Our Story</a></li>
+                        <li><a href="#">Materials</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Help</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Size Guide</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 Kiddypod. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu functionality
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+        
+        menuBtn.addEventListener('click', function() {
+            this.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        });
+        
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        overlay.addEventListener('click', closeMobileMenu);
+
+        // Add click event listeners to all nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+        
+        // Close menu when clicking on a link
+        document.querySelectorAll('.mobile-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                closeMobileMenu();
+                mobileMenu.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+        
+        // Form submission
+        document.querySelector('.subscribe-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.querySelector('input[type="email"]').value;
+            if (email) {
+                alert('Thank you for subscribing! We\'ll notify you when we launch.');
+                this.reset();
+            }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                if (this.getAttribute('href') !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('notifyForm');
+            const emailInput = document.getElementById('emailInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const buttonText = submitBtn.querySelector('.btn-text');
+            
+            // Handle form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleSubmit();
+            });
+            
+            // Handle button click
+            submitBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await handleSubmit();
+            });
+            
+            async function handleSubmit() {
+                const email = emailInput.value.trim();
+                
+                // Validate email
+                if (!email || !isValidEmail(email)) {
+                    showNotification('Please enter a valid email address', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                buttonText.textContent = 'Sending...';
+                
+                try {
+                    // Submit the form to Formspree
+                    const formData = new FormData(form);
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Thank you for subscribing! We\'ll notify you when we launch.', 'success');
+                        form.reset();
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to save email');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification('Something went wrong. Please try again later.', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    buttonText.textContent = 'Notify Me';
+                }
+            }
+            
+            function showNotification(message, type = 'success') {
+                // Remove any existing notifications
+                const existingNotifications = document.querySelectorAll('.notification-toast');
+                existingNotifications.forEach(notification => {
+                    document.body.removeChild(notification);
+                });
+                
+                // Create new notification
+                const notification = document.createElement('div');
+                notification.className = 'notification-toast';
+                notification.textContent = message;
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.left = '50%';
+                notification.style.transform = 'translateX(-50%)';
+                notification.style.padding = '15px 30px';
+                notification.style.borderRadius = '50px';
+                notification.style.fontFamily = 'Poppins, sans-serif';
+                notification.style.fontWeight = '500';
+                notification.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                notification.style.zIndex = '1000';
+                notification.style.animation = 'slideDown 0.5s ease-out';
+                notification.style.background = type === 'success' ? '#4CAF50' : 
+                                            type === 'error' ? '#f44336' : '#2196F3';
+                notification.style.color = 'white';
+                notification.style.transition = 'all 0.3s ease';
+                
+                document.body.appendChild(notification);
+                
+                // Hide notification after 5 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 5000);
+            }
+            
+            function isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+            
+            // Add animation for notifications
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-50%) translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(-50%) translateY(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
