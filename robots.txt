@@ -1,0 +1,9 @@
+# Allow all bots to crawl everything (except cart & checkout)
+User-agent: *
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+# Sitemap location
+Sitemap: https://www.kiddypod.com/sitemap.xml
